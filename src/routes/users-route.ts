@@ -21,6 +21,10 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
       }
     },
     {
+      detail: {
+        tags: ["Users"],
+        summary: "Register User Baru",
+      },
       body: t.Object({
         name: t.String({ maxLength: 255 }),
         email: t.String({ maxLength: 255 }),
@@ -47,6 +51,10 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
       }
     },
     {
+      detail: {
+        tags: ["Users"],
+        summary: "Login User",
+      },
       body: t.Object({
         email: t.String(),
         password: t.String(),
@@ -64,52 +72,70 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
     }
     return { token };
   })
-  .get("/current", async ({ token, set }) => {
-    try {
-      if (!token) {
-        set.status = 401;
-        return { error: "Unauthorized" };
+  .get(
+    "/current",
+    async ({ token, set }) => {
+      try {
+        if (!token) {
+          set.status = 401;
+          return { error: "Unauthorized" };
+        }
+
+        const result = await usersService.getCurrentUser(token);
+
+        if (!result.success) {
+          set.status = 401;
+          return { error: result.error };
+        }
+
+        set.status = 200;
+        return {
+          data: {
+            id: result.data.id,
+            name: result.data.name,
+            email: result.data.email,
+            created_at: result.data.createdAt,
+          },
+        };
+      } catch (err: any) {
+        set.status = 500;
+        return { error: err.message || "Internal server error" };
       }
-
-      const result = await usersService.getCurrentUser(token);
-
-      if (!result.success) {
-        set.status = 401;
-        return { error: result.error };
-      }
-
-      set.status = 200;
-      return {
-        data: {
-          id: result.data.id,
-          name: result.data.name,
-          email: result.data.email,
-          created_at: result.data.createdAt,
-        },
-      };
-    } catch (err: any) {
-      set.status = 500;
-      return { error: err.message || "Internal server error" };
+    },
+    {
+      detail: {
+        tags: ["Users"],
+        summary: "Get Current User",
+      },
     }
-  })
-  .delete("/logout", async ({ token, set }) => {
-    try {
-      if (!token) {
-        set.status = 401;
-        return { error: "Unauthorized" };
+  )
+  .delete(
+    "/logout",
+    async ({ token, set }) => {
+      try {
+        if (!token) {
+          set.status = 401;
+          return { error: "Unauthorized" };
+        }
+
+        const result = await usersService.logoutUser(token);
+
+        if (!result.success) {
+          set.status = 401;
+          return { error: result.error };
+        }
+
+        set.status = 200;
+        return { data: result.data };
+      } catch (err: any) {
+        set.status = 500;
+        return { error: err.message || "Internal server error" };
       }
-
-      const result = await usersService.logoutUser(token);
-
-      if (!result.success) {
-        set.status = 401;
-        return { error: result.error };
-      }
-
-      set.status = 200;
-      return { data: result.data };
-    } catch (err: any) {
-      set.status = 500;
-      return { error: err.message || "Internal server error" };
+    },
+    {
+      detail: {
+        tags: ["Users"],
+        summary: "Logout User",
+      },
     }
-  });
+  );
