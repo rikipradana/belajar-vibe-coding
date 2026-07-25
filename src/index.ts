@@ -18,11 +18,19 @@ const app = new Elysia()
       },
     })
   )
-  .get("/health", () => ({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  }))
+  .get(
+    "/health",
+    () => ({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    }),
+    {
+      detail: {
+        hide: true,
+      },
+    }
+  )
   .get("/", () => ({
     name: "Bun + ElysiaJS + Drizzle + MySQL API",
     version: "1.0.0",
