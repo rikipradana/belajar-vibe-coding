@@ -1,4 +1,4 @@
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { swagger } from "@elysiajs/swagger";
 import { usersRoute } from "./routes/users-route";
@@ -31,10 +31,24 @@ const app = new Elysia()
       },
     }
   )
-  .get("/", () => ({
-    name: "Bun + ElysiaJS + Drizzle + MySQL API",
-    version: "1.0.0",
-  }))
+  .get(
+    "/",
+    () => ({
+      name: "Bun + ElysiaJS + Drizzle + MySQL API",
+      version: "1.0.0",
+    }),
+    {
+      detail: {
+        summary: "Root API Info",
+      },
+      response: {
+        200: t.Object({
+          name: t.String({ default: "Bun + ElysiaJS + Drizzle + MySQL API" }),
+          version: t.String({ default: "1.0.0" }),
+        }),
+      },
+    }
+  )
   .use(usersRoute)
   .listen(port);
 
