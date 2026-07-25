@@ -32,6 +32,10 @@ export type GetCurrentUserResult =
   | { success: true; data: UserResponse }
   | { success: false; error: string };
 
+export type LogoutResult =
+  | { success: true; data: "OK" }
+  | { success: false; error: string };
+
 export class UsersService {
   async registerUser(payload: RegisterUserDTO): Promise<RegisterResult> {
     // 1. Check if email already exists
@@ -128,6 +132,17 @@ export class UsersService {
         createdAt: user.createdAt,
       },
     };
+  }
+
+  async logoutUser(token: string): Promise<LogoutResult> {
+    // Delete session directly in a single query and check affected rows
+    const [result] = await db.delete(sessions).where(eq(sessions.token, token));
+
+    if (!result || result.affectedRows === 0) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    return { success: true, data: "OK" };
   }
 }
 
