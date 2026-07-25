@@ -21,6 +21,17 @@ export type LoginResult =
   | { success: true; data: string }
   | { success: false; error: string };
 
+export interface UserResponse {
+  id: number;
+  name: string;
+  email: string;
+  createdAt: Date;
+}
+
+export type GetCurrentUserResult =
+  | { success: true; data: UserResponse }
+  | { success: false; error: string };
+
 export class UsersService {
   async registerUser(payload: RegisterUserDTO): Promise<RegisterResult> {
     // 1. Check if email already exists
@@ -83,6 +94,40 @@ export class UsersService {
     await db.insert(sessions).values(newSession);
 
     return { success: true, data: token };
+  }
+
+  async getCurrentUser(token: string): Promise<GetCurrentUserResult> {
+    // 1. Find session by token
+    const [session] = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.token, token))
+      .limit(1);
+
+    if (!session) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    // 2. Find user by userId
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, session.userId))
+      .limit(1);
+
+    if (!user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    return {
+      success: true,
+      data: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
+    };
   }
 }
 
