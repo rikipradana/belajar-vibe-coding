@@ -87,4 +87,32 @@ export const usersRoute = new Elysia({ prefix: "/api/users" })
       set.status = 500;
       return { error: err.message || "Internal server error" };
     }
+  })
+  .delete("/logout", async ({ headers, set }) => {
+    try {
+      const authHeader = headers["authorization"];
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
+
+      const token = authHeader.substring(7).trim();
+      if (!token) {
+        set.status = 401;
+        return { error: "Unauthorized" };
+      }
+
+      const result = await usersService.logoutUser(token);
+
+      if (!result.success) {
+        set.status = 401;
+        return { error: result.error };
+      }
+
+      set.status = 200;
+      return { data: result.data };
+    } catch (err: any) {
+      set.status = 500;
+      return { error: err.message || "Internal server error" };
+    }
   });
